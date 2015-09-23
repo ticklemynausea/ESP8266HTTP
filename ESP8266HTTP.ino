@@ -41,7 +41,9 @@ void loop() {
   HttpResponse httpResponse;
 
   /* values to send */
-  int value1 = 0, value2 = 0;
+  int value1, value2;
+  value1 = (value1 + 1) % 100;
+  value2 = random(0, 100);
 
   /* configuration */
   /* * http request type */
@@ -50,14 +52,12 @@ void loop() {
   httpRequest.setHost("api.thingspeak.com");
   /* * location * */
   httpRequest.setLocation("/update");
+
   /* * headers * */
-  httpRequest.addHeader("Connection", "close");
   httpRequest.addHeader("X-ThingSpeakAPIKey", S_THINGSPEAK_API_KEY);
   httpRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
   /* request body */
-  value1 = (value1 + 1) % 100;
-  value2 = random(0, 100);
   httpRequest.setBody("field1="  + String(value1) + "&field2=" + String(value2));
 
   /* make the request */

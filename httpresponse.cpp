@@ -30,14 +30,18 @@ void HttpResponse::addBody(String responseBody) {
 }
 
 void HttpResponse::printResponse() {
-  Serial.print("HTTP ");
-  Serial.print(this->responseStatusCode);
-  Serial.print(" ");
-  Serial.println(this->responseStatusMessage);
-  Serial.println("===== Headers =============================");
-  Serial.print(this->responseHeaders);
-  Serial.println("===== Body ================================");
-  Serial.print(this->responseBody);
-  Serial.println("===========================================");
+  if (this->responseReady) {
+    Serial.print("HTTP ");
+    Serial.print(this->responseStatusCode);
+    Serial.print(" ");
+    Serial.println(this->responseStatusMessage);
+    Serial.println("===== Response Headers =============================");
+    Serial.print(this->responseHeaders);
+    Serial.println("===== Response Body ================================");
+    Serial.print(this->responseBody);
+    Serial.println("====================================================");
+  } else {
+    Serial.println("HTTP Request Failed");
+  }
 }
 

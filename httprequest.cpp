@@ -40,8 +40,11 @@ void HttpRequest::setBody(String httpBody) {
   this->httpBody = httpBody;
 }
 
-void HttpRequest::setCallback(void (*httpCallback)()) {
-  this->httpCallback = httpCallback;
+void HttpRequest::addDefaultHeaders() {
+  this->addHeader("Connection", "close");
+  if (this->httpBody.length() > 0) {
+    this->addHeader("Content-Length", String(this->httpBody.length()));
+  }
 }
 
 String HttpRequest::httpMethodString() {
@@ -56,7 +59,7 @@ String HttpRequest::httpMethodString() {
       break;
 
     case HttpRequest::PUT:
-      return "PUTT";
+      return "PUT";
       break;
 
     case HttpRequest::DELETE:
@@ -71,19 +74,19 @@ String HttpRequest::httpMethodString() {
  
 }
 
-String HttpRequest::serializeRequest() {
+String HttpRequest::httpRequestString() {
 
+  /* add default headers before serializing request */
+  this->addDefaultHeaders();
+
+  /* build request string */
   String request = "";
 
   request += this->httpMethodString() + " " + this->httpLocation + " HTTP/1.1\r\n";
   request += this->httpHeaders;
+  request += "\r\n";
 
-  if ((this->httpMethod == HttpRequest::GET)
-  ||  (this->httpMethod == HttpRequest::DELETE)) {
-    request += "\r\n";
-    request += "\r\n";
-  } else {
-    request += "\r\n";
+  if (this->httpBody.length() > 0) {
     request += this->httpBody;
     request += "\r\n";
   }
@@ -117,10 +120,12 @@ HttpResponse HttpRequest::makeRequest() {
     Serial.println("");
   }
 
-  String request = this->serializeRequest();
+  String request = this->httpRequestString();
 
   /* debug request */
+  Serial.println("===== Request ======================================");
   Serial.println(request);
+  Serial.println("====================================================");
 
   /* send request */
   client.print(request);
@@ -131,41 +136,45 @@ HttpResponse HttpRequest::makeRequest() {
   bool readingHeaders = true;
 
   while (client.available()) {
-
-    /* line number increment */
-    n++;
-
-    /* parse first line (HTTP response) */ 
-    if (n == 1) {
-      word1 = client.readStringUntil(' ');
-      if (word1 == "HTTP/1.1") {
-        Serial.println("Got " + word1);
-        word1 = client.readStringUntil(' ');
-        word2 = client.readStringUntil('\r');
-        word2.trim();
-        httpResponse.setStatus(word1, word2);
-        Serial.println("code " + word1 + " - " + word2);
-      } else {
-        Serial.println("Wrong HTTP version in response: " + word1);
-      }
-      continue;
-    }
-
     line = client.readStringUntil('\r');
-    line.trim();
-
-    if ((line == "") && (readingHeaders)) {
-      readingHeaders = false;
-    } else if (readingHeaders) {
-      httpResponse.addHeader(line);
-    } else {
-      httpResponse.addBody(line);
-    }
-    //Serial.println(line);
-
+    Serial.print(line);
   }
+//    /* line number increment */
+//    n++;
+//
+//    /* parse first line (HTTP response) */ 
+//    if (n == 1) {
+//      word1 = client.readStringUntil(' ');
+//      if (word1 == "HTTP/1.1") {
+//        Serial.println("Got " + word1);
+//        word1 = client.readStringUntil(' ');
+//        word2 = client.readStringUntil('\r');
+//        word2.trim();
+//        httpResponse.setReady();
+//        httpResponse.setStatus(word1, word2);
+//        Serial.println("code " + word1 + " - " + word2);
+//      } else {
+//        Serial.println("Wrong HTTP version in response: " + word1);
+//      }
+//      continue;
+//    }
+//
+//    line = client.readStringUntil('\r');
+//    line.trim();
+//
+//    if ((line == "") && (readingHeaders)) {
+//      readingHeaders = false;
+//    } else if (readingHeaders) {
+//      httpResponse.addHeader(line);
+//    } else {
+//      Serial.println("adding line" + line);
+//      httpResponse.addBody(line);
+//    }
+//  }
 
-  Serial.println("closing connection");
+  Serial.print("closing connection after reading ");
+  Serial.print(n);
+  Serial.println(" lines");
   /* Connection is closed when loop() returns */
 
   return httpResponse;

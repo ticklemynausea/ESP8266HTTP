@@ -30,8 +30,6 @@ class HttpRequest {
 
   void setBody(String body);
 
-  void setCallback(void (*httpCallback)());
-
   HttpResponse makeRequest();
 
   private:
@@ -45,7 +43,8 @@ class HttpRequest {
   void (*httpCallback)();
 
   String httpMethodString();
-  String serializeRequest();
+  String httpRequestString();
+  void addDefaultHeaders();
 
 };
 
